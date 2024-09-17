@@ -1,5 +1,5 @@
 .headerContainer {
-  background-color: #15ddb2;
+  background: linear-gradient(to bottom, #000066 0%, #ff66cc 100%);
   width: 100%;
   color: #020303;
   padding: 10px;
@@ -32,7 +32,7 @@
 
 .navContainer a {
   text-decoration: none;
-  color: #707070;
+  color: #c4b0b0;
   font-weight: bold;
 }
 

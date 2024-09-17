@@ -6,12 +6,21 @@ import markerShadow from 'leaflet/dist/images/marker-shadow.png';
 import 'leaflet/dist/leaflet.css';
 import 'leaflet-draw'; 
 import 'leaflet-draw/dist/leaflet.draw.css'; 
+import './MyMap.css'; 
 
 const customLocations = [
   { id: 1, name: "Custom Location 1", position: [48.8566, 2.3522], info: "This is Paris" },
   { id: 2, name: "Custom Location 2", position: [40.7128, -74.0060], info: "This is New York" },
   { id: 3, name: "Custom Location 3", position: [35.6895, 139.6917], info: "This is Tokyo" },
 ];
+
+const animatedDivIcon = L.divIcon({
+  className: 'blinking-marker', 
+  html: "<div class='pulse-marker'></div>",
+  iconSize: [24, 24], 
+  iconAnchor: [12, 12],
+  popupAnchor: [1, -24],
+});
 
 const DefaultIcon = L.icon({
   iconUrl: markerIcon,
@@ -31,7 +40,7 @@ const MyMap = () => {
   const ws = useRef(null); 
 
   useEffect(() => {
-    const ws = new WebSocket('ws://127.0.0.1:54678');
+    ws.current = new WebSocket('ws://127.0.0.1:54678'); 
 
     ws.current.onopen = () => {
       console.log('WebSocket connection established');
@@ -70,7 +79,18 @@ const MyMap = () => {
           name: country.name.common,
           position: [country.latlng[0], country.latlng[1]],
           info: `Population: ${country.population}`,
-          borders: country.borders || []
+          borders: country.borders || [],
+          capital: country.capital?.[0] || 'N/A',
+          population: country.population,
+          area: country.area,
+          timezones: country.timezones,
+          languages: Object.values(country.languages || {}).join(', '),
+          currencies: Object.values(country.currencies || {}).map(curr => curr.name).join(', '),
+          currencySymbols: Object.values(country.currencies || {}).map(curr => curr.symbol).join(', '),
+          region: country.region,
+          subregion: country.subregion,
+          tld: country.tld?.[0] || 'N/A',
+          flagUrl: country.flags?.svg,
         }));
         setCountries(countryMarkers);
       });
@@ -92,7 +112,7 @@ const MyMap = () => {
   
       ws.current.send(JSON.stringify(message)); 
     } else {
-      console.log('WebSocket is not open. Why I don`t know man');
+      console.log('WebSocket is not open.');
     }
   
     if (country.borders.length) {
@@ -102,7 +122,6 @@ const MyMap = () => {
       setCountryBorders(null); 
     }
   };
-  
 
   const handleWebSocketResponse = (message) => {
     if (message.status === 'success') {
@@ -118,14 +137,13 @@ const MyMap = () => {
 
   const handleIncomingEvent = (message) => {
     console.log('Real-time event:', message.data);
-  
   };
 
   return (
     <MapContainer center={[51.505, -0.09]} zoom={2} style={{ height: '100vh', width: '100%' }}>
       <TileLayer
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
       />
 
       {countryBorders && <CountryBorders bordersLayer={countryBorders} />}
@@ -134,6 +152,7 @@ const MyMap = () => {
         <Marker
           key={country.id}
           position={country.position}
+          icon={animatedDivIcon} 
           draggable={true}
           eventHandlers={{
             click: () => {
@@ -147,8 +166,16 @@ const MyMap = () => {
               onClose={() => setActiveLocation(null)}
             >
               <div>
-                <h3>{country.name}</h3>
-                <p>{country.info}</p>
+                <h3>{country.name} ({country.officialName})</h3>
+                <p><strong>Capital:</strong> {country.capital}</p>
+                <p><strong>Population:</strong> {country.population}</p>
+                <p><strong>Area:</strong> {country.area} km²</p>
+                <p><strong>Timezones:</strong> {country.timezones.join(', ')}</p>
+                <p><strong>Languages:</strong> {country.languages}</p>
+                <p><strong>Currencies:</strong> {country.currencies} ({country.currencySymbols})</p>
+                <p><strong>Region:</strong> {country.region}, {country.subregion}</p>
+                <p><strong>Top-level domain:</strong> {country.tld}</p>
+                <img src={country.flagUrl} alt={`${country.name} flag`} style={{ width: '100px' }} />
               </div>
             </Popup>
           )}
@@ -159,6 +186,7 @@ const MyMap = () => {
         <Marker
           key={location.id}
           position={location.position}
+          icon={animatedDivIcon} 
           draggable={true}
           eventHandlers={{
             click: () => {
@@ -198,3 +226,5 @@ const CountryBorders = ({ bordersLayer }) => {
 };
 
 export default MyMap;
+
+

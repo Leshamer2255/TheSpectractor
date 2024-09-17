@@ -5,8 +5,7 @@ import styles from './Header.module.css';
 const Header = () => {
   return (
     <header className={styles.headerContainer}>
-      <h1>Уorld Information</h1>
-      <p>Piv piv paf paf</p>
+      <h1>The Spectractor</h1>
       <nav className={styles.navContainer}>
         <ul>
           <li><Link to="/">Main page bro</Link></li>
